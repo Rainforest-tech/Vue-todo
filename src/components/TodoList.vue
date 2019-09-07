@@ -10,42 +10,21 @@
                           leave-active-class='animated fadeOutDown'>
             <todo-item v-for="(todo, index) in todosFiltered" :key="todo.id"
                        :todo="todo" :index="index"
-                       :checkAll="!anyRemainig"
-                       @removedTodo="removeTodo"
-                       @finishedEdit="finishedEdit">
+                       :checkAll="!anyRemainig">
 
             </todo-item>
         </transition-group>
         <div class="extra-container">
-            <div>
-                <label>
-                    <input type="checkbox" :checked="!anyRemainig"
-                           @change="checkAllTodos">
-                    Check All
-                </label>
-            </div>
-            <div>{{remainig}} items left</div>
+            <todo-check-all :anyRemainig="anyRemainig"/>
+            <todo-items-remainig :remaining="remaining"/>
         </div>
         <div class="extra-container">
-            <div>
-                <button :class="{active: filter ==='all'}"
-                        @click="filter='all'">All
-                </button>
-                <button :class="{active: filter ==='active'}"
-                        @click="filter='active'">Active
-                </button>
-                <button :class="{active: filter ==='completed'}"
-                        @click="filter='completed'">Completed
-                </button>
-            </div>
+            <todo-filter/>
             <div>
                 <transition appear mode="in-out"
                             enter-active-class="animate fadeInUp"
                             leave-active-class="animate flipOutY">
-                    <button v-if="showClearCompleatedButton"
-                            @click="clearCompleted"
-                    >Clear completed
-                    </button>
+    <todo-clear-completed :showClearCompleatedButton="showClearCompleatedButton"/>
                 </transition>
             </div>
         </div>
@@ -54,10 +33,18 @@
 
 <script>
 import TodoItem from './TodoItem.vue';
+import TodoItemsRemainig from './TodoItemsRemainig.vue';
+import TodoCheckAll from './TodoCheckAll.vue';
+import TodoFilter from './TodoFilter.vue';
+import TodoClearCompleted from './TodoClearCompleted.vue';
 
 export default {
   name: 'TodoList',
   components: {
+    TodoClearCompleted,
+    TodoFilter,
+    TodoCheckAll,
+    TodoItemsRemainig,
     TodoItem,
   },
   data() {
@@ -105,18 +92,33 @@ export default {
     },
     checkAllTodos(event) {
       // eslint-disable-next-line no-return-assign
-      this.todos.map(todo => todo.completed = event.target.checked);
+      this.todos.map(todo => todo.completed = event);
     },
     clearCompleted() {
       this.todos = this.todos.filter(todo => !todo.completed);
     },
   },
+  created() {
+    eventBus.$on('removedTodo', index => this.removeTodo(index));
+    eventBus.$on('finishedTodo', data => this.finishedEdit(data));
+    eventBus.$on('checkAllChanged', checked => this.checkAllTodos(checked));
+    // eslint-disable-next-line no-return-assign
+    eventBus.$on('filterChanged', filter => (this.filter = filter));
+    eventBus.$on('clearCompletedTodos', () => this.clearCompleted());
+  },
+  beforeDestroy() {
+    eventBus.$off('removedTodo');
+    eventBus.$off('finishedTodo');
+    eventBus.$off('checkAllChanged');
+    eventBus.$off('filterChanged');
+    eventBus.$off('clearCompletedTodos');
+  },
   computed: {
-    remainig() {
+    remaining() {
       return this.todos.filter(todo => !todo.completed).length;
     },
     anyRemainig() {
-      return this.remainig !== 0;
+      return this.remaining !== 0;
     },
     todosFiltered() {
       switch (this.filter) {

@@ -1,7 +1,7 @@
 <template>
     <div class="todo-item">
         <div class="todo-item">
-            <input type="checkbox" v-model="completed" @change="editTodo">
+            <input type="checkbox" v-model="completed" @change="finishEdit">
             <input v-if="editing"
                    class="todo-item-edit"
                    type="text" v-model="title"
@@ -16,10 +16,15 @@
                 {{title}}
             </div>
         </div>
-
-        <div class="remove-item" @click="removeTodo(index)">
-            &times;
+        <div class="extra-container">
+            <div>
+                <button @click="pluralize">Plural</button>
+            </div>
+            <div class="remove-item" @click="removeTodo(index)">
+                &times;
+            </div>
         </div>
+
     </div>
 </template>
 
@@ -49,6 +54,12 @@ export default {
       beforeEditCahce: '',
     };
   },
+  created() {
+    eventBus.$on('pluralize', this.handlePluralize);
+  },
+  beforeDestroy() {
+    eventBus.$off('pluralize', this.handlePluralize);
+  },
   watch: {
     checkAll() {
       this.completed = this.checkAll ? true : this.todo.completed;
@@ -56,16 +67,10 @@ export default {
   },
   methods: {
     removeTodo(index) {
-      this.$emit('removedTodo', index);
+      eventBus.$emit('removedTodo', index);
     },
-    editTodo() {
-      // eslint-disable-next-line no-param-reassign
-      if (this.title.trim() === '') {
-        this.title = this.beforeEditCache;
-      }
-      this.beforeEditCache = this.title;
-      this.editing = !this.editing;
-      this.$emit('finishedEdit', {
+    finishEdit() {
+      eventBus.$emit('finishedTodo', {
         index: this.index,
         todo: {
           id: this.id,
@@ -75,9 +80,25 @@ export default {
         },
       });
     },
+    editTodo() {
+      // eslint-disable-next-line no-param-reassign
+      if (this.title.trim() === '') {
+        this.title = this.beforeEditCache;
+      }
+      this.beforeEditCache = this.title;
+      this.editing = !this.editing;
+      this.finishEdit();
+    },
     cancelEdit() {
       this.editing = !this.editing;
       this.title = this.beforeEditCache;
+    },
+    pluralize() {
+      eventBus.$emit('pluralize');
+    },
+    handlePluralize() {
+      this.title = `${this.title}s`;
+      this.finishEdit();
     },
   },
   directives: {
