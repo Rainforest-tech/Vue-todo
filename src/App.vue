@@ -1,41 +1,73 @@
 <template>
-  <div id="app" class="container">
-    <img alt="Vue logo" src="./assets/logo.png" class="logo">
-    <todo-list/>
-  </div>
+    <div id="app">
+        <ul class="nav">
+            <li>
+                <router-link :to="{name: 'home'}">Home</router-link>
+            </li>
+          <li>
+            <router-link :to="{name: 'todo'}">App</router-link>
+          </li>
+          <li>
+            <router-link :to="{name: 'about'}">About</router-link>
+          </li>
+          <li>
+            <router-link :to="{name: 'login'}">Login</router-link>
+          </li>
+          <li>
+            <router-link :to="{name: 'register'}">Register</router-link>
+          </li>
+        </ul>
+        <router-view/>
+    </div>
 </template>
 
-<script>
-import TodoList from './components/TodoList.vue';
+<style lang="scss">
+    * {
+        box-sizing: border-box;
+    }
 
-export default {
-  name: 'app',
-  components: {
-    TodoList,
-  },
-};
-</script>
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
 
-<style>
-  * {
-    box-sizing: border-box;
-  }
+    #app {
+        font-family: 'Avenir', Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        color: #2c3e50;
+        font-size: 24px;
+    }
 
-  .container {
-    max-width: 600px;
-    margin: 0 auto;
-  }
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-  margin-top: 60px;
-  font-size: 24px;
-}
-  .logo {
-    display: block;
-    margin: 20px auto;
-    height: 75px;
-  }
+    .logo {
+        display: block;
+        margin: 20px auto;
+        height: 75px;
+    }
+
+    .nav {
+        display: flex;
+        list-style: none;
+        padding: 15px 0;
+        margin: 0;
+        justify-content: flex-end;
+        background-color: #f5f8fa;
+        border-bottom: 1px solid lightgray;
+        margin-bottom: 24px;
+
+        & a {
+            color: #636b6f;
+            padding: 0 25px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: .1rem;
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+    }
+
+    .flex-center {
+        display: flex;
+        justify-content: center;
+    }
 </style>

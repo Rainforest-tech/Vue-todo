@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import axios from 'axios';
+// import db from './firebase';
 
 Vue.use(Vuex);
 axios.defaults.baseURL = 'http://todo-laravel.test/api';
@@ -67,10 +68,17 @@ export default new Vuex.Store({
     },
   },
   actions: {
+    // eslint-disable-next-line no-unused-vars
     retrieveTodos({ commit }) {
       axios.get('/todos')
         .then(({ data }) => commit('retrieveTodos', data))
         .catch(response => console.log(response));
+      // db.collection('todos').get()
+      //   .then((querySnapshot) => {
+      //     querySnapshot.forEach((doc) => {
+      //       console.log(doc.data());
+      //     });
+      //   });
     },
     addTodo({ commit }, todo) {
       axios.post('/todos', todo)
