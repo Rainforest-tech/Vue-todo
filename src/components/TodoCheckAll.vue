@@ -11,15 +11,15 @@
 <script>
 export default {
   name: 'TodoCheckAll',
-  props: {
-    anyRemainig: {
-      type: Boolean,
-      required: true,
+  computed: {
+    anyRemainig() {
+      return this.$store.getters.anyRemainig;
     },
   },
   methods: {
     allChecked() {
-      eventBus.$emit('checkAllChanged', this.anyRemainig);
+      // eslint-disable-next-line no-return-assign,no-restricted-globals
+      this.$store.commit('checkAll', event.target.checked);
     },
   },
 };

@@ -19,6 +19,7 @@ module.exports = {
     parser: 'babel-eslint',
   },
   globals: {
-    eventBus: "readonly"
+    eventBus: "readonly",
+    event: "readonly",
   },
 };

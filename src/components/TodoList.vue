@@ -15,8 +15,8 @@
             </todo-item>
         </transition-group>
         <div class="extra-container">
-            <todo-check-all :anyRemainig="anyRemainig"/>
-            <todo-items-remainig :remaining="remaining"/>
+            <todo-check-all/>
+            <todo-items-remainig/>
         </div>
         <div class="extra-container">
             <todo-filter/>
@@ -24,7 +24,7 @@
                 <transition appear mode="in-out"
                             enter-active-class="animate fadeInUp"
                             leave-active-class="animate flipOutY">
-    <todo-clear-completed :showClearCompleatedButton="showClearCompleatedButton"/>
+    <todo-clear-completed/>
                 </transition>
             </div>
         </div>
@@ -51,22 +51,6 @@ export default {
     return {
       newTodo: '',
       idForTodo: 3,
-      beforeEditCache: '',
-      filter: 'all',
-      todos: [
-        {
-          id: 1,
-          title: 'finish vue Screencast',
-          completed: false,
-          editing: false,
-        },
-        {
-          id: 2,
-          title: 'takeover world',
-          completed: false,
-          editing: false,
-        },
-      ],
     };
   },
   methods: {
@@ -74,64 +58,21 @@ export default {
       if (this.newTodo.trim().length === 0) {
         return;
       }
-      this.todos.push({
+      this.$store.dispatch('addTodo', {
         id: this.idForTodo,
         title: this.newTodo,
-        completed: false,
       });
+
       this.newTodo = '';
       this.idForTodo += 1;
     },
-    finishedEdit(data) {
-      this.todos.splice(data.index, 1, data.todo);
-    },
-
-
-    removeTodo(index) {
-      this.todos.splice(index, 1);
-    },
-    checkAllTodos(event) {
-      // eslint-disable-next-line no-return-assign
-      this.todos.map(todo => todo.completed = event);
-    },
-    clearCompleted() {
-      this.todos = this.todos.filter(todo => !todo.completed);
-    },
-  },
-  created() {
-    eventBus.$on('removedTodo', index => this.removeTodo(index));
-    eventBus.$on('finishedTodo', data => this.finishedEdit(data));
-    eventBus.$on('checkAllChanged', checked => this.checkAllTodos(checked));
-    // eslint-disable-next-line no-return-assign
-    eventBus.$on('filterChanged', filter => (this.filter = filter));
-    eventBus.$on('clearCompletedTodos', () => this.clearCompleted());
-  },
-  beforeDestroy() {
-    eventBus.$off('removedTodo');
-    eventBus.$off('finishedTodo');
-    eventBus.$off('checkAllChanged');
-    eventBus.$off('filterChanged');
-    eventBus.$off('clearCompletedTodos');
   },
   computed: {
-    remaining() {
-      return this.todos.filter(todo => !todo.completed).length;
-    },
     anyRemainig() {
-      return this.remaining !== 0;
+      return this.$store.getters.anyRemainig;
     },
     todosFiltered() {
-      switch (this.filter) {
-        case 'active':
-          return this.todos.filter(todo => !todo.completed);
-        case 'completed':
-          return this.todos.filter(todo => todo.completed);
-        default:
-          return this.todos;
-      }
-    },
-    showClearCompleatedButton() {
-      return this.todos.filter(todo => todo.completed).length > 0;
+      return this.$store.getters.todosFiltered;
     },
   },
 

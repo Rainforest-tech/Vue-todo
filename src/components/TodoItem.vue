@@ -5,8 +5,8 @@
             <input v-if="editing"
                    class="todo-item-edit"
                    type="text" v-model="title"
-                   @blur="editTodo"
-                   @keyup.enter="editTodo"
+                   @blur="finishEdit"
+                   @keyup.enter="finishEdit"
                    @keyup.esc="cancelEdit"
                    v-focus
             >
@@ -20,7 +20,7 @@
             <div>
                 <button @click="pluralize">Plural</button>
             </div>
-            <div class="remove-item" @click="removeTodo(index)">
+            <div class="remove-item" @click="removeTodo(id)">
                 &times;
             </div>
         </div>
@@ -40,19 +40,20 @@ export default {
       type: Number,
       required: true,
     },
-    checkAll: {
-      type: Boolean,
-      required: true,
-    },
   },
   data() {
     return {
       id: this.todo.id,
       title: this.todo.title,
       completed: this.todo.completed,
-      editing: this.todo.editing,
+      editing: false,
       beforeEditCahce: '',
     };
+  },
+  computed: {
+    checkAll() {
+      return this.$store.getters.checkAll;
+    },
   },
   created() {
     eventBus.$on('pluralize', this.handlePluralize);
@@ -66,28 +67,24 @@ export default {
     },
   },
   methods: {
-    removeTodo(index) {
-      eventBus.$emit('removedTodo', index);
+    removeTodo(id) {
+      this.$store.dispatch('deleteTodo', id);
     },
     finishEdit() {
-      eventBus.$emit('finishedTodo', {
-        index: this.index,
-        todo: {
-          id: this.id,
-          title: this.title,
-          completed: this.completed,
-          editing: this.editing,
-        },
-      });
-    },
-    editTodo() {
-      // eslint-disable-next-line no-param-reassign
       if (this.title.trim() === '') {
         this.title = this.beforeEditCache;
+        return;
       }
+      this.$store.commit('updateTodo', {
+        id: this.id,
+        title: this.title,
+        completed: this.completed,
+      });
+      this.editing = false;
+    },
+    editTodo() {
       this.beforeEditCache = this.title;
       this.editing = !this.editing;
-      this.finishEdit();
     },
     cancelEdit() {
       this.editing = !this.editing;
