@@ -19,7 +19,7 @@ export default {
   methods: {
     allChecked() {
       // eslint-disable-next-line no-return-assign,no-restricted-globals
-      this.$store.commit('checkAll', event.target.checked);
+      this.$store.dispatch('checkAll', event.target.checked);
     },
   },
 };

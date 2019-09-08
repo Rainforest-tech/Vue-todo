@@ -75,7 +75,7 @@ export default {
         this.title = this.beforeEditCache;
         return;
       }
-      this.$store.commit('updateTodo', {
+      this.$store.dispatch('updateTodo', {
         id: this.id,
         title: this.title,
         completed: this.completed,

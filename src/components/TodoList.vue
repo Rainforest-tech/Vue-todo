@@ -50,7 +50,6 @@ export default {
   data() {
     return {
       newTodo: '',
-      idForTodo: 3,
     };
   },
   methods: {
@@ -59,13 +58,15 @@ export default {
         return;
       }
       this.$store.dispatch('addTodo', {
-        id: this.idForTodo,
         title: this.newTodo,
+        completed: false,
       });
 
       this.newTodo = '';
-      this.idForTodo += 1;
     },
+  },
+  created() {
+    this.$store.dispatch('retrieveTodos');
   },
   computed: {
     anyRemainig() {

@@ -1,30 +1,17 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
+import axios from 'axios';
 
 Vue.use(Vuex);
+axios.defaults.baseURL = 'http://todo-laravel.test/api';
 
 export default new Vuex.Store({
   state: {
     filter: 'all',
-    todos: [
-      {
-        id: 1,
-        title: 'finish vue Screencast',
-        completed: false,
-        editing: false,
-      },
-      {
-        id: 2,
-        title: 'takeover world',
-        completed: false,
-        editing: false,
-      },
-    ],
+    todos: [],
   },
   getters: {
-    todo(state, index) {
-      return state.todos[index];
-    },
+    todo: state => index => state.todos[index],
     remaining(state) {
       return state.todos.filter(todo => !todo.completed).length;
     },
@@ -75,17 +62,48 @@ export default new Vuex.Store({
       const index = state.todos.findIndex(item => item.id === id);
       state.todos.splice(index, 1);
     },
+    retrieveTodos(state, todos) {
+      state.todos = todos;
+    },
   },
   actions: {
-    addTodo(context, todo) {
-      setTimeout(() => context.commit('addTodo', todo), 2000);
+    retrieveTodos({ commit }) {
+      axios.get('/todos')
+        .then(({ data }) => commit('retrieveTodos', data))
+        .catch(response => console.log(response));
     },
-    updateTodo(context, todo) {
-      context.commit('updateTodo', todo);
+    addTodo({ commit }, todo) {
+      axios.post('/todos', todo)
+        .then(({ data }) => commit('addTodo', data))
+        .catch(response => console.log(response));
+    },
+    updateTodo({ commit }, todo) {
+      axios.patch(`/todos/${todo.id}`, todo)
+        .then(({ data }) => commit('updateTodo', data))
+        .catch(response => console.log(response));
+    },
+    checkAll({ commit }, checked) {
+      axios.patch('/todosCheckAll', {
+        completed: checked,
+      })
+        .then(() => commit('checkAll', checked))
+        .catch(response => console.log(response));
     },
     // eslint-disable-next-line no-unused-vars
-    deleteTodo(context, id) {
-      setTimeout(() => context.commit('deleteTodo', id), 1000);
+    deleteTodo({ commit }, id) {
+      axios.delete(`/todos/${id}`)
+        .then(() => commit('deleteTodo', id))
+        .catch(response => console.log(response));
+    },
+    clearCompleted({ commit, state }) {
+      const completed = state.todos
+        .filter(todo => todo.completed)
+        .map(todo => todo.id);
+      axios.delete('/todosDeleteCompleted', {
+        data: { todos: completed },
+      })
+        .then(() => commit('clearCompleted'))
+        .catch(response => console.log(response));
     },
   },
 });
