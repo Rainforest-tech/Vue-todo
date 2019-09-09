@@ -8,10 +8,12 @@ axios.defaults.baseURL = 'http://todo-laravel.test/api';
 
 export default new Vuex.Store({
   state: {
+    token: localStorage.getItem('access_token') || null,
     filter: 'all',
     todos: [],
   },
   getters: {
+    loggedIn: state => state.token !== null,
     todo: state => index => state.todos[index],
     remaining(state) {
       return state.todos.filter(todo => !todo.completed).length;
@@ -66,9 +68,55 @@ export default new Vuex.Store({
     retrieveTodos(state, todos) {
       state.todos = todos;
     },
+    retrieveToken(state, token) {
+      state.token = token;
+    },
+    destroyToken(state) {
+      state.token = null;
+    },
   },
   actions: {
     // eslint-disable-next-line no-unused-vars
+    register({ commit }, credentials) {
+      return new Promise((resolve, reject) => {
+        axios.post('/register', credentials)
+          .then(({ data }) => {
+            resolve(data);
+          })
+          .catch(response => reject(response));
+      });
+    },
+    retrieveToken({ commit }, credentials) {
+      return new Promise((resolve, reject) => {
+        axios.post('/login', credentials)
+          .then(({ data }) => {
+            const { access_token: token } = data;
+            localStorage.setItem('access_token', token);
+            commit('retrieveToken', token);
+            resolve(data);
+          })
+          .catch(response => reject(response));
+      });
+    },
+    destroyToken({ commit, state }) {
+      return new Promise((resolve, reject) => {
+        axios.post('/logout', null, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${state.token}`,
+          },
+        })
+          .then(() => {
+            localStorage.removeItem('access_token');
+            commit('destroyToken');
+            resolve();
+          })
+          .catch((response) => {
+            localStorage.removeItem('access_token');
+            reject(response);
+          });
+      });
+    },
     retrieveTodos({ commit }) {
       axios.get('/todos')
         .then(({ data }) => commit('retrieveTodos', data))
