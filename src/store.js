@@ -1,10 +1,20 @@
+/* eslint-disable dot-notation */
 import Vue from 'vue';
 import Vuex from 'vuex';
 import axios from 'axios';
 // import db from './firebase';
+// import './plugins/axios';
+
+axios.interceptors.request.use(
+  (config) => {
+    config.baseURL = 'http://127.0.0.1:8000/api';
+    config.headers['Authorization'] = `Bearer ${localStorage.getItem('access_token')}`;
+    return config;
+  },
+  error => Promise.reject(error),
+);
 
 Vue.use(Vuex);
-axios.defaults.baseURL = 'http://todo-laravel.test/api';
 
 export default new Vuex.Store({
   state: {
@@ -15,13 +25,9 @@ export default new Vuex.Store({
   getters: {
     loggedIn: state => state.token !== null,
     todo: state => index => state.todos[index],
-    remaining(state) {
-      return state.todos.filter(todo => !todo.completed).length;
-    },
-    anyRemainig(getters) {
-      return getters.remaining !== 0;
-    },
-    todosFiltered(state) {
+    remaining: state => state.todos.filter(todo => !todo.completed).length,
+    anyRemainig: getters => getters.remaining !== 0,
+    todosFiltered: (state) => {
       switch (state.filter) {
         case 'active':
           return state.todos.filter(todo => !todo.completed);
@@ -61,6 +67,9 @@ export default new Vuex.Store({
         completed: todo.completed,
       });
     },
+    clearTodos(state) {
+      state.todos = [];
+    },
     deleteTodo(state, id) {
       const index = state.todos.findIndex(item => item.id === id);
       state.todos.splice(index, 1);
@@ -70,6 +79,7 @@ export default new Vuex.Store({
     },
     retrieveToken(state, token) {
       state.token = token;
+      axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
     },
     destroyToken(state) {
       state.token = null;
@@ -78,78 +88,67 @@ export default new Vuex.Store({
   actions: {
     // eslint-disable-next-line no-unused-vars
     register({ commit }, credentials) {
-      return new Promise((resolve, reject) => {
-        axios.post('/register', credentials)
-          .then(({ data }) => {
-            resolve(data);
-          })
-          .catch(response => reject(response));
-      });
+      return axios.post('/register', credentials)
+        .then(({ data }) => data)
+        .catch(error => Promise.reject(error.response));
     },
     retrieveToken({ commit }, credentials) {
-      return new Promise((resolve, reject) => {
-        axios.post('/login', credentials)
-          .then(({ data }) => {
-            const { access_token: token } = data;
-            localStorage.setItem('access_token', token);
-            commit('retrieveToken', token);
-            resolve(data);
-          })
-          .catch(response => reject(response));
-      });
-    },
-    destroyToken({ commit, state }) {
-      return new Promise((resolve, reject) => {
-        axios.post('/logout', null, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${state.token}`,
-          },
+      return axios.post('/login', credentials)
+        .then(({ data }) => {
+          const { token } = data;
+          localStorage.setItem('access_token', token);
+          commit('retrieveToken', token);
         })
-          .then(() => {
-            localStorage.removeItem('access_token');
-            commit('destroyToken');
-            resolve();
-          })
-          .catch((response) => {
-            localStorage.removeItem('access_token');
-            reject(response);
-          });
-      });
+        .catch(error => Promise.reject(error.response));
+    },
+    async destroyToken({ commit }) {
+      axios.post('/logout', null)
+        .then(() => {
+          localStorage.removeItem('access_token');
+          commit('destroyToken');
+        })
+        .catch(() => {
+          localStorage.removeItem('access_token');
+        });
+    },
+    clearTodos({ commit }) {
+      commit('clearTodos');
+    },
+    retrieveName({ state }) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
+
+      console.log(localStorage.getItem('access_token'));
+      return axios.get('/user')
+        .then(({ data }) => data);
     },
     retrieveTodos({ commit }) {
       axios.get('/todos')
         .then(({ data }) => commit('retrieveTodos', data))
-        .catch(response => console.log(response));
-      // db.collection('todos').get()
-      //   .then((querySnapshot) => {
-      //     querySnapshot.forEach((doc) => {
-      //       console.log(doc.data());
-      //     });
-      //   });
+        .catch(response => response);
     },
     addTodo({ commit }, todo) {
+      // axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
       axios.post('/todos', todo)
         .then(({ data }) => commit('addTodo', data))
-        .catch(response => console.log(response));
+        .catch(response => response);
     },
     updateTodo({ commit }, todo) {
       axios.patch(`/todos/${todo.id}`, todo)
         .then(({ data }) => commit('updateTodo', data))
-        .catch(response => console.log(response));
+        .catch(response => response);
     },
     checkAll({ commit }, checked) {
       axios.patch('/todosCheckAll', {
         completed: checked,
       })
         .then(() => commit('checkAll', checked))
-        .catch(response => console.log(response));
+        .catch(response => response);
     },
     // eslint-disable-next-line no-unused-vars
     deleteTodo({ commit }, id) {
       axios.delete(`/todos/${id}`)
         .then(() => commit('deleteTodo', id))
-        .catch(response => console.log(response));
+        .catch(response => response);
     },
     clearCompleted({ commit, state }) {
       const completed = state.todos
@@ -159,7 +158,7 @@ export default new Vuex.Store({
         data: { todos: completed },
       })
         .then(() => commit('clearCompleted'))
-        .catch(response => console.log(response));
+        .catch(response => response);
     },
   },
 });

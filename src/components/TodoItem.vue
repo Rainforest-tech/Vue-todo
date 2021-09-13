@@ -1,5 +1,5 @@
 <template>
-    <div class="todo-item">
+    <div class="todo-item" v-if="todo">
         <div class="todo-item">
             <input type="checkbox" v-model="completed" @change="finishEdit">
             <input v-if="editing"
@@ -32,38 +32,48 @@
 export default {
   name: 'TodoItem',
   props: {
-    todo: {
-      type: Object,
-      required: true,
-    },
+    // todo: {
+    //   type: Object,
+    //   required: true,
+    // },
     index: {
       type: Number,
+      required: true,
+    },
+    checkAll: {
+      type: Boolean,
       required: true,
     },
   },
   data() {
     return {
-      id: this.todo.id,
-      title: this.todo.title,
-      completed: this.todo.completed,
+      id: '',
+      title: '',
+      completed: false,
       editing: false,
       beforeEditCahce: '',
     };
   },
-  computed: {
-    checkAll() {
-      return this.$store.getters.checkAll;
-    },
-  },
   created() {
     eventBus.$on('pluralize', this.handlePluralize);
+    this.todo = this.$store.getters.todo(this.index);
+    this.id = this.todo.id;
+    this.title = this.todo.title;
+    this.completed = this.todo.completed;
   },
   beforeDestroy() {
     eventBus.$off('pluralize', this.handlePluralize);
   },
   watch: {
     checkAll() {
-      this.completed = this.checkAll ? true : this.todo.completed;
+      // eslint-disable-next-line no-return-assign
+      return this.completed = this.checkAll ? true : this.todo.completed;
+    },
+    completed() {
+      return this.todo.completed;
+    },
+    todo() {
+      return this.$store.getters.todo(this.index);
     },
   },
   methods: {

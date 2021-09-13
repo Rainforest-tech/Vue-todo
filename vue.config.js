@@ -8,6 +8,10 @@ module.exports = {
   //     enableInSFC: false,
   //   },
   // },
+  productionSourceMap: false,
+  publicPath: process.env.NODE_ENV === 'production'
+    ? './' // prod
+    : '/', // dev
   configureWebpack: {
     plugins: [
       // new MiniCssExtractPlugin({

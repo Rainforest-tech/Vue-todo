@@ -1,5 +1,6 @@
 <template>
     <div>
+        <h2>Welcome, {{name}}</h2>
         <input type="text" class="todo-input"
                placeholder="What needs to be done"
                v-model="newTodo"
@@ -24,7 +25,7 @@
                 <transition appear mode="in-out"
                             enter-active-class="animate fadeInUp"
                             leave-active-class="animate flipOutY">
-    <todo-clear-completed/>
+                    <todo-clear-completed/>
                 </transition>
             </div>
         </div>
@@ -32,6 +33,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 import TodoItem from './TodoItem.vue';
 import TodoItemsRemainig from './TodoItemsRemainig.vue';
 import TodoCheckAll from './TodoCheckAll.vue';
@@ -50,6 +52,7 @@ export default {
   data() {
     return {
       newTodo: '',
+      name: '',
     };
   },
   methods: {
@@ -67,14 +70,13 @@ export default {
   },
   created() {
     this.$store.dispatch('retrieveTodos');
+    this.$store.dispatch('retrieveName')
+
+    // eslint-disable-next-line no-return-assign
+      .then(data => this.name = data.name);
   },
   computed: {
-    anyRemainig() {
-      return this.$store.getters.anyRemainig;
-    },
-    todosFiltered() {
-      return this.$store.getters.todosFiltered;
-    },
+    ...mapGetters(['anyRemainig', 'todosFiltered']),
   },
 
 
@@ -82,7 +84,7 @@ export default {
 </script>
 
 <style lang="scss">
-    @import url("https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.css");
+
 
     .todo-input {
         width: 100%;
